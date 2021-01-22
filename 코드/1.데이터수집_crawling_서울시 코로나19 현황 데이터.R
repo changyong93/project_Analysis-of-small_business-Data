@@ -1,6 +1,7 @@
 rm(list = ls())
 library(jsonlite) #Fromjson 내장 패키지
 library(reshape) #rename 내장 패키지
+library(lubridate)
 
 #URL : https://news.seoul.go.kr/api/27/getCorona19Status/get_status_ajax.php?draw=7&start=100&length=100
 
@@ -42,12 +43,35 @@ repeat{
   if((i*100)>=data_totalnum) break
   i <- i+1
 }
-
 #컬럼명 재지정
-covid19_patient<- rename(covid19_patient,c('V1'='연번','V2'='환자','V3'='확진일','V4'='거주지',
+covid19_patient<- rename(covid19_patient,c('V1'='연번','V2'='환자','V3'='확진일','V4'='행정구역',
                                            'V5'='여행력','V6'='접촉력','V7'='퇴원현황'))
+
+#연번 값 변경
+num <- c()
+for(i in 1:nrow(covid19_patient)){
+  string = str_split(string = covid19_patient$연번[i], pattern = "no'>")[[1]][2]
+  string = str_split(string, pattern = "</")[[1]][1]
+  num = c(num, string)
+}
+covid19_patient$연번 <- num
+
+#분기 년도 추가
+covid19_patient$년도 <- year(ymd(covid19_patient$확진일))
+covid19_patient$분기 <- quarter(ymd(covid19_patient$확진일))
+
+#행정구역 & 년도 & 분기별 확진자 수로 변경(19.1~20.3분기)
+covid19_patient <- covid19_patient %>% 
+  filter( !행정구역 %in% c('기타', '','타시도') &
+            년도 %in% c(2019,2020) &
+            !(년도 == 2020 & 분기 == 4)) %>% 
+  group_by(년도,분기,행정구역) %>% 
+  summarise(확진자수 = n())
+
+
+
 #파일 저장 위치 지정
 setwd('C:/Users/ChangYong/Desktop/나노디그리/1.정규강의 학습자료/1차 프로젝트/소상공인/데이터')
 getwd()
 
-saveRDS(covid19_patient,"코로나19확진자현황.rds")
+saveRDS(as.data.frame(covid19_patient),"코로나19확진자현황.rds")

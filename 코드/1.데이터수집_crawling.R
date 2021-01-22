@@ -69,6 +69,7 @@ library(rvest)
 library(RSelenium)
 library(httr)
 library(seleniumPipes)
+library(stringr)
 
 ##selenium(셀레니움)을 켭니다
 ##cmd를 켠 상태에서
@@ -91,8 +92,8 @@ remDr$navigate(url_path)
 #비회원 접속
 element <- remDr$findElement(using="xpath",value='//*[@id="loginPop"]/div/button[1]')
 element$clickElement()
-
 #자동화
+
 #crawling csv파일로 저장 함수
 crawling <- function(x,y){
   table <- remDr$findElement(using=x,value=y)
@@ -102,10 +103,14 @@ crawling <- function(x,y){
   table = page_html %>% html_table(fill = TRUE)
   Sys.setlocale('LC_ALL', 'Korean')
   data <- as.data.frame(table[4])
-  data_final <- rbind(data[1:2,],data[str_sub(data$행정구역,-1)=='구',])
-  if(b>6){
+  if(b==8){
+    data_final <- rbind(data[1:2,],data[str_sub(data$행정구역,-1)=='동',])
+    file_name <- paste0(ele_year$getElementText(),"_",ele_quarter$getElementText(),"_",ele_info_class$getElementText(),".csv")
+  } else if(b==9) {
+    data_final <- rbind(data[1:2,],data[str_sub(data$행정구역,-1)=='구',])
     file_name <- paste0(ele_year$getElementText(),"_",ele_quarter$getElementText(),"_",ele_info_class$getElementText(),".csv")
   } else{
+    data_final <- rbind(data[1:2,],data[str_sub(data$행정구역,-1)=='구',])
     file_name <- paste0(ele_year$getElementText(),"_",ele_quarter$getElementText(),"_",
                         ele_info_class$getElementText(),"_",ele_sector$getElementText(),"_",ele_option$getElementText(),".csv")
   }
@@ -115,17 +120,28 @@ crawling <- function(x,y){
   write.csv(data_final,file_name)
 }
 
-setwd('C:/Users/ChangYong/Desktop/나노디그리/1.정규강의 학습자료/1차 프로젝트/소상공인/data/raw_data/우리마을 상권분석 서비스 데이터')
+setwd('C:/Users/ChangYong/Desktop/나노디그리/1.정규강의 학습자료/1차 프로젝트/소상공인/데이터/원본데이터/우리마을 상권분석 서비스 데이터')
 getwd()
-#input 변수
-# year_quarter <- list(Set1=c(2019,4),Set2=c(2020,1),Set3=c(2020,2),Set1=c(2020,3))
-# info_class <- c(2:9) #점포분류 
-# sector <- c(2:4) #생활밀접업종
+# input 변수
+year_quarter <- list(Set1=c(2017,1),Set2=c(2017,2),Set3=c(2017,3),Set4=c(2017,4),
+                     Set5=c(2019,4),Set6=c(2020,1),Set7=c(2020,2),Set8=c(2020,3))
+# info_class <- c(2:9) #점포분류
+info_class <- c(8:9) #점포수 및 신생기업 생존률
+info_class_name <- c(
+  # "인구수" = 7,
+  "소득/가구수" = 8,
+  "임대시세" = 9
+  )
 
-year_quarter <- list(Set1=c(2019,4))
-#2020 - 1,2,3 // 2019 - 4분기
-info_class <- c(4) #점포분류 
-sector <- c(3) #생활밀접업종
+sector <- c(2:4) #생활밀접업종
+sector_name <- c("외식업" = 2,
+                 "서비스업" = 3,
+                 "소매업" = 4)
+
+# year_quarter <- list(Set1=c(2019,4))
+# #2020 - 1,2,3 // 2019 - 4분기
+# info_class <- c(4) #점포분류 
+# sector <- c(3) #생활밀접업종
 
 for(a in 1:length(year_quarter)){
   ele_year=remDr$findElement(using="xpath",value=paste0("//*[@id='selectYear']/option[@value='",year_quarter[[a]][1],"']"))
@@ -141,7 +157,7 @@ for(a in 1:length(year_quarter)){
     if(b>6){
       remDr$findElement(using="xpath",value="//*[@id='presentSearch']")$clickElement()
       Sys.sleep(time = 2)
-      crawling("id","table1")
+      crawling(x = "id",y = "table1")
       Sys.sleep(time = 0.5)
     } else{
       for(cc in c(sector)){
@@ -159,6 +175,8 @@ for(a in 1:length(year_quarter)){
           Sys.sleep(time = 2.5)
           crawling("id","table1")
           Sys.sleep(time = 0.5)
+          print(paste0(year_quarter[[a]][1],"_",year_quarter[[a]][2],"분기",
+                names(info_class_name[b]),"_",names(sector_name[cc]),"_",round(d/length(induM_data),2),"%"))
         } 
       }
     }
