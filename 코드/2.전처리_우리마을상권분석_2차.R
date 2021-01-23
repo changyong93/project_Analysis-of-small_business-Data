@@ -1,7 +1,7 @@
 rm(list = ls())
 library(tidyverse)
 #폴더 지정
-setwd('C:/Users/ChangYong/Desktop/나노디그리/1.정규강의 학습자료/1차 프로젝트/소상공인/데이터/원본데이터/우리마을 상권분석 서비스 데이터/1501_2009')
+setwd('C:/Users/ChangYong/Desktop/나노디그리/1.정규강의 학습자료/1차 프로젝트/소상공인/데이터/원본데이터/우리마을 상권분석 서비스 데이터/1501_2009_2차')
 getwd()
 
 file_name <- list.files() #폴더 내 파일명 가져오기
@@ -45,12 +45,14 @@ modi_data <- function(filename,info_class,year){
 }
 
 #데이터를 정보분류 8개로 합치기 위한 변수 지정
-store_num_data <- c() #점포수
+# store_num_data <- c() #점포수
 new_Enter_data <- c()#신생기업 생존률
+# pop_date <- c() # 인구수
+rent_data <- c() #임대시세
+income_data <- c() #소득/가구수
 
-i
 #데이터 정보분류에 따라 합치기(merge)
-for (i in c(1:(length(file_name)-1))){
+for (i in c(1:(length(file_name)))){
   x=file_name[i]
   y=info_class_list[strsplit(file_name_list[i],'_')[[1]][3]]
   if(str_sub(file_name[i],1,4)==2017){
@@ -60,34 +62,44 @@ for (i in c(1:(length(file_name)-1))){
   } else {
     data = rbind(modi_data(x,y,"2018"), modi_data(x,y,"2019"),modi_data(x,y,"2020"))
   }
-  if(y==1){
-    store_num_data = rbind(store_num_data,data)
-  } else {
+  if (y==2){
     new_Enter_data = rbind(new_Enter_data,data)
+  # } else if (y==6){
+  #   pop_date = rbind(pop_date, data)
+  } else if (y==7){
+    income_data = rbind(income_data, data)
+  } else {
+    rent_data = rbind(rent_data,data)
   }
-  cat(round(x = i*100/(length(file_name)-1), digits = 2L),"% 완료","_",i,"_",x,"\n")
+  cat(round(x = i*100/(length(file_name)), digits = 2L),"% 완료","_",i,"_",x,"\n")
 }
 
-#불필요 행 제거
-store_num_data <- store_num_data %>% filter(행정구역!="서울시 전체")
+#불필요 행 및 열 제거
+# store_num_data <- store_num_data %>% filter(행정구역!="서울시 전체")
 new_Enter_data <- new_Enter_data %>% filter(행정구역!="서울시 전체")
+rent_data <- rent_data %>% filter(행정구역!="행정구역") %>% select(-c("환산 임대료.1","환산 임대료.2"))
+income_data <- income_data %>% filter(행정구역!="서울시 전체") %>% select(-c("가구수"))
+
+#임대료 컬럼 문자 정리
+rent_data[,4] <- gsub(pattern = ",",replacement = "", x = rent_data[,4])
 
 #소득분위 컬럼 값 변경
+income_data <- income_data %>% mutate(소득분위 = str_sub(소득분위,1,1))
 
 #정보분류 2-3번 합치기(대분류 & 소분류 포함 데이터)
-smallbz_data <- merge(x=new_Enter_data,y=store_num_data,by=c('년도','분기','대분류','소분류','행정구역'),all=T)
+# smallbz_data <- merge(x=new_Enter_data,y=store_num_data,by=c('년도','분기','대분류','소분류','행정구역'),all=T)
+smallbz_data <- merge(x=new_Enter_data,y=rent_data,by=c('년도','분기','행정구역'),all=T)
 
-
+#문자형 변경
 vars <- 1:5
 smallbz_data[,vars] <- map_df(.x = smallbz_data[,vars],.f = as.factor)
 smallbz_data[,-vars] <- map_df(.x = smallbz_data[,-vars],.f = as.numeric)
+income_data <- map_df(.x = income_data, .f = as.factor)
 lapply(X = smallbz_data,FUN = function(x){sum(is.na(x))})
 
-#csv file로 전처리 데이터 저장장
+#csv file로 전처리 데이터 저장
 setwd("C:/Users/ChangYong/Desktop/나노디그리/1.정규강의 학습자료/1차 프로젝트/소상공인/데이터")
 getwd()
 
 #rdata로 저장
-save(smallbz_data,file = '우리마을상권분석_1501_2009.rda')
-
-
+save(smallbz_data,income_data,file = '우리마을상권분석_1501_2009_2차.rda')
