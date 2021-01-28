@@ -28,11 +28,11 @@ element$clickElement()
 #기준년/분기 선택
 year <- remDr$findElement(using="xpath", value ="//*[@id='selectYear']/option[@value='2020']")
 year$clickElement()
-quarter <- remDr$findElement(using="xpath",value="//*[@id='selectQu']/option[@value='1']")
+quarter <- remDr$findElement(using="xpath",value="//*[@id='selectQu']/option[@value='3']")
 quarter$clickElement()
 
 #정보분류 선택
-info_class <- remDr$findElement(using="xpath",value="//*[@id='infoCategory']/option[2]")
+info_class <- remDr$findElement(using="xpath",value="//*[@id='infoCategory']/option[6]")
 info_class$clickElement()
 
 #생활밀접업좀
@@ -52,19 +52,21 @@ button$clickElement()
 table <- remDr$findElement(using="id",value="table1")
 page_parse = remDr$getPageSource()[[1]]
 page_html = page_parse %>% read_html()
+
 Sys.setlocale('LC_ALL', 'English')
 table = page_html %>% html_table(fill = TRUE)
 Sys.setlocale('LC_ALL', 'Korean')
-data <- as.data.frame(table[4])
+data <- as.data.frame(table[4])[1:2,]
 # data <- data[str_sub(data$행정구역,-1)=='구',]
 data <- rbind(data[1:2,],data[str_sub(data$행정구역,-1)=='구',])
 # View(data)
 file_name <- paste0(year$getElementText(),"_",quarter$getElementText(),"_",
-                    info_class$getElementText(),"_",sector$getElementText(),"_",option$getElementText(),".csv")
-setwd('C:/Users/ChangYong/Desktop/나노디그리/1.정규강의 학습자료/1차 프로젝트/소상공인/data/raw_data/우리마을 상권분석 서비스 데이터')
+                    info_class$getElementText(),".csv")
+setwd('C:/Users/ChangYong/Desktop/나노디그리/1.정규강의 학습자료/1차 프로젝트/소상공인/2. 데이터/원본데이터/우리마을 상권분석 서비스 데이터')
 write.csv(data,file_name)
 
 #--------------------------------------------------------------------------------------------------------------
+rm(list = ls())
 library(rvest)
 library(RSelenium)
 library(httr)
@@ -92,9 +94,9 @@ remDr$navigate(url_path)
 #비회원 접속
 element <- remDr$findElement(using="xpath",value='//*[@id="loginPop"]/div/button[1]')
 element$clickElement()
-#자동화
 
-#crawling csv파일로 저장 함수
+
+#crawling하여 csv파일로 저장하는 함수 생성성
 crawling <- function(x,y){
   table <- remDr$findElement(using=x,value=y)
   page_parse = remDr$getPageSource()[[1]]
@@ -125,23 +127,16 @@ getwd()
 # input 변수
 year_quarter <- list(Set1=c(2017,1),Set2=c(2017,2),Set3=c(2017,3),Set4=c(2017,4),
                      Set5=c(2019,4),Set6=c(2020,1),Set7=c(2020,2),Set8=c(2020,3))
-# info_class <- c(2:9) #점포분류
-info_class <- c(8:9) #점포수 및 신생기업 생존률
+
+info_class <- c(3,8,9) 
 info_class_name <- c(
-  # "인구수" = 7,
+  "신생기업 생존율 = 3",
   "소득/가구수" = 8,
   "임대시세" = 9
   )
 
 sector <- c(2:4) #생활밀접업종
-sector_name <- c("외식업" = 2,
-                 "서비스업" = 3,
-                 "소매업" = 4)
-
-# year_quarter <- list(Set1=c(2019,4))
-# #2020 - 1,2,3 // 2019 - 4분기
-# info_class <- c(4) #점포분류 
-# sector <- c(3) #생활밀접업종
+sector_name <- c("외식업" = 2, "서비스업" = 3, "소매업" = 4)
 
 for(a in 1:length(year_quarter)){
   ele_year=remDr$findElement(using="xpath",value=paste0("//*[@id='selectYear']/option[@value='",year_quarter[[a]][1],"']"))
@@ -182,4 +177,3 @@ for(a in 1:length(year_quarter)){
     }
   }
 }
-
