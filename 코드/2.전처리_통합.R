@@ -11,9 +11,9 @@ loc1 <- loc1 %>% slice(-var)
 loc2 <- loc2 %>% slice(-var)
 sangkwon_loc <- rbind(loc1,loc2)
 sangkwon_loc <- sangkwon_loc[,c(6,11)]
-
+rm(loc1, loc2)
 #행정동 코드-행정구 파일 읽기
-setwd('C:/Users/ChangYong/Desktop/나노디그리/1.정규강의 학습자료/1차 프로젝트/소상공인/데이터/원본데이터/')
+setwd('C:/Users/ChangYong/Desktop/나노디그리/1.정규강의 학습자료/1차 프로젝트/소상공인/2. 데이터/원본데이터/')
 guess_encoding(file = '행정동코드_매핑정보_20200325.xlsx')
 sangkwon_gu <- read.xlsx(xlsxFile = '행정동코드_매핑정보_20200325.xlsx',sheet = 1)
 sangkwon_gu <- sangkwon_gu %>% slice(-1)
@@ -21,7 +21,7 @@ sangkwon_gu <- sangkwon_gu[,c(2,4,5)]#행정동 추가
 
 #EDA를 위한 초기 전처리 진행
 #상권-추정매출 데이터 합치기
-setwd('C:/Users/ChangYong/Desktop/나노디그리/1.정규강의 학습자료/1차 프로젝트/소상공인/데이터/원본데이터/')
+setwd('C:/Users/ChangYong/Desktop/나노디그리/1.정규강의 학습자료/1차 프로젝트/소상공인/2. 데이터/원본데이터/')
 getwd()
 #상권 추정매출 데이터 전처리
 data2015 <- read.csv("서울시 우리마을가게 상권분석서비스(상권-추정매출)_2015.csv", fileEncoding = 'euc-kr')
@@ -61,8 +61,8 @@ smallbz_total_1501_2009 <- merge(x = smallbz_total_1501_2009, y = sangkwon_gu,by
 smallbz_total_1501_2009 <- rename(smallbz_total_1501_2009,c('행정구역' = '시군구명'))
 
 #우리마을 상권분석 데이터 불러오기
-setwd("C:/Users/ChangYong/Desktop/나노디그리/1.정규강의 학습자료/1차 프로젝트/소상공인/데이터")
-load('우리마을상권분석_1501_2009_2차.rda')
+setwd("C:/Users/ChangYong/Desktop/나노디그리/1.정규강의 학습자료/1차 프로젝트/소상공인/2. 데이터")
+load('우리마을상권분석_1501_2009.rda')
 colnames(smallbz_data)[6:9] <- c("생존률_1년차","생존률_3년차","생존률_5년차","임대료")
 
 #문자열 변경
@@ -78,7 +78,7 @@ smallbz_total_1501_2009 <- merge(x = smallbz_total_1501_2009, y = income_data, b
 rm(smallbz_data) ; rm(income_data)
 
 #점포 개수 추가하기
-setwd("C:/Users/ChangYong/Desktop/나노디그리/1.정규강의 학습자료/1차 프로젝트/소상공인/데이터/원본데이터")
+setwd("C:/Users/ChangYong/Desktop/나노디그리/1.정규강의 학습자료/1차 프로젝트/소상공인/2. 데이터/원본데이터")
 data1 <- read.csv("서울시_우리마을가게_상권분석서비스(상권-점포)_2015년.csv")
 data2 <- read.csv("서울시_우리마을가게_상권분석서비스(상권-점포)_2016년.csv")
 data3 <- read.csv("서울시_우리마을가게_상권분석서비스(상권-점포)_2017년.csv")
@@ -122,7 +122,7 @@ smallbz_total_1501_2009 <- merge(x=smallbz_total_1501_2009,y=jeom_num, by = c('�
 smallbz_total_1501_2009 <- smallbz_total_1501_2009[,-ncol(smallbz_total_1501_2009)]
 
 #임대면적 데이터 불러오기
-setwd("C:/Users/ChangYong/Desktop/나노디그리/1.정규강의 학습자료/1차 프로젝트/소상공인/데이터/원본데이터")
+setwd("C:/Users/ChangYong/Desktop/나노디그리/1.정규강의 학습자료/1차 프로젝트/소상공인/2. 데이터/원본데이터")
 area_1501_1612 <- read.xlsx("상권별_집합_상가_기본정보_14011612.xlsx")
 area_1701_1812 <- read.xlsx("상권별_집합_상가_기본정보_17011812.xlsx")
 area_1901_1912 <- read.xlsx("상권별_집합_상가_기본정보_19011912.xlsx")
@@ -232,10 +232,9 @@ smallbz_total_1501_2009 <- merge(x = smallbz_total_1501_2009,
                                  y = remove_data,
                                  by = c('ADSTRD_CD','상권_코드','소분류'),all.x=T)
 smallbz_total_1501_2009 <- smallbz_total_1501_2009 %>% filter(is.na(n)==T) %>% select(-c(n,임대료))
-smallbz_total_1501_2009 %>% filter(is.na(n)==T) %>% arrange(매출총액)
 
 #유동인구 데이터 가져오기
-setwd("C:/Users/ChangYong/Desktop/나노디그리/1.정규강의 학습자료/1차 프로젝트/소상공인/데이터/원본데이터")
+setwd("C:/Users/ChangYong/Desktop/나노디그리/1.정규강의 학습자료/1차 프로젝트/소상공인/2. 데이터/원본데이터")
 smallbz_pop <- read.csv("서울시 우리마을가게 상권분석서비스(상권-추정유동인구).csv")
 
 
@@ -258,7 +257,7 @@ smallbz_total_1501_2009 <- merge(x = smallbz_total_1501_2009, y = smallbz_pop,
                                  by = c("ADSTRD_CD","상권_코드","년도","분기","행정구역","행정동명"), all.x=T)
 
 #상권-숙박시설 데이터 합치기
-setwd("C:/Users/ChangYong/Desktop/나노디그리/1.정규강의 학습자료/1차 프로젝트/소상공인/데이터/원본데이터")
+setwd("C:/Users/ChangYong/Desktop/나노디그리/1.정규강의 학습자료/1차 프로젝트/소상공인/2. 데이터/원본데이터")
 smallbz_faci <- read.csv("서울시 우리마을가게 상권분석서비스(상권-집객시설).csv")
 
 ##NA를 0으로 변환
@@ -334,5 +333,5 @@ smallbz_total_1501_2009[,vars] <- map_df(.x = smallbz_total_1501_2009[,vars],.f 
 smallbz_total_1501_2009[,-vars] <- map_df(.x = smallbz_total_1501_2009[,-vars],.f = as.numeric)
 
 #파일 저장
-setwd("C:/Users/ChangYong/Desktop/나노디그리/1.정규강의 학습자료/1차 프로젝트/소상공인/데이터")
-save(smallbz_total_1501_2009,file = "dataset_3차.rda")
+setwd("C:/Users/ChangYong/Desktop/나노디그리/1.정규강의 학습자료/1차 프로젝트/소상공인/2. 데이터")
+save(smallbz_total_1501_2009,file = "dataset.rda")

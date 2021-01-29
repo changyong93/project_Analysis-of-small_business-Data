@@ -2,14 +2,14 @@ rm(list = ls())
 library(jsonlite) #Fromjson 내장 패키지
 library(reshape) #rename 내장 패키지
 library(lubridate)
-
 #URL : https://news.seoul.go.kr/api/27/getCorona19Status/get_status_ajax.php?draw=7&start=100&length=100
 
 url <- "https://news.seoul.go.kr/api/27/getCorona19Status/get_status_ajax_pre.php?draw=1"
-url <- paste0(url,'&start=0&length=100') #url 지정
-#하기 코드로 url 데이터를 보려면 library(httr) 설치
-# get_url <- GET(url)
-# content(get_url)
+url <- paste0(url,'&start=0&length=1') #url 지정
+
+# 하기 코드로 url 데이터를 보려면 library(httr) 설치
+get_url <- GET(url)
+content(get_url)
 
 data_json <- fromJSON(url) #데이터를  json형태로 호출
 data_json$recordsTotal #총 row수(데이터개수) 반환

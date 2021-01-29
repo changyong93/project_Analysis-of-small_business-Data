@@ -1,8 +1,8 @@
 rm(list = ls())
 library(tidyverse)
 library(ggridges)
-setwd("C:/Users/ChangYong/Desktop/나노디그리/1.정규강의 학습자료/1차 프로젝트/소상공인/데이터")
-load("dataset_2차.rda")
+setwd("C:/Users/ChangYong/Desktop/나노디그리/1.정규강의 학습자료/1차 프로젝트/소상공인/2. 데이터")
+load("dataset.rda")
 ###########################################################################################################
 #년분기 문자 벡터 만들기
 vars <- smallbz_total_1501_2009 %>% mutate(년분기 = paste0(년도,"_",분기)) %>% distinct(년분기) %>% arrange(년분기)
@@ -684,5 +684,5 @@ vars_10up <- cor_result %>% filter(abs(매출총액)>0.10) %>% select(매출총�
 
 
 #train & test set 저장
-setwd("C:/Users/ChangYong/Desktop/나노디그리/1.정규강의 학습자료/1차 프로젝트/소상공인/데이터")
+setwd("C:/Users/ChangYong/Desktop/나노디그리/1.정규강의 학습자료/1차 프로젝트/소상공인/2. 데이터")
 save(trainset,testset,dataset,vars_20up, vars_10up, file = "dataset_set.rda")
