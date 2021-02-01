@@ -472,8 +472,19 @@ dataset %>%
   filter(년분기 !="2020_3") %>% 
   ggplot(aes(x = 집객시설수, y = 매출총액, col = 매출총액))+geom_point()
 
+####### ++++ 토요일 10,40,50대 매출비율
+datas <- smallbz_total_1501_2009 %>% 
+  mutate(년분기 = paste0(년도,"_",분기)) %>% 
+  group_by(년도,분기,행정구역,대분류,중분류) %>% 
+  summarise(매출비율_토104050대 = mean(((연령대_10_매출_금액+연령대_40_매출_금액+연령대_50_매출_금액)/매출총액)*(토요일_매출_금액/매출총액)),
+            매출총액 = mean(log(매출총액/점포수)))
+datas %>% 
+  filter(년분기 !="2020_3") %>% 
+  ggplot(aes(x = 매출비율_토104050대, y = 매출총액, color = 매출비율_토104050대))+geom_point()
+cor.test(x = datas$매출비율_토104050대,y = datas$매출총액)
 
 #데이터 변경, 범주형 및 연속형
+
 vars <- c("년도","분기","행정구역","대분류","중분류","년분기","소득분위")
 vars <- which(colnames(dataset) %in% vars)
 dataset[,vars] <- map_df(.x = dataset[,vars], .f = as.factor)
