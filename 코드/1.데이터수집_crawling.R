@@ -3,75 +3,6 @@ library(RSelenium)
 library(httr)
 library(seleniumPipes)
 library(stringr)
-rm(list=ls())
-##selenium(셀레니움)을 켭니다
-##cmd를 켠 상태에서
-##1) cd C:\r-selenium
-##2) java -Dwebdriver.gecko.driver="geckodriver.exe" -jar selenium-server-standalone-4.0.0-alpha-1.jar -port 4445
-##입력후 엔터로 실행합니다
-
-##그리고 R에서 아래 명령어를 실행
-remDr <- remoteDriver(remoteServerAddr="localhost",
-                      port=4445L,
-                      browserName="chrome")
-#cmd에서 상기 1),2)과정 후 cmd를 켜놔야 함
-remDr$open()
-
-#사이트 섭속
-url_path <- 'https://golmok.seoul.go.kr/regionAreaAnalysis.do'
-remDr$navigate(url_path)
-
-#비회원 접속
-element <- remDr$findElement(using="xpath",value='//*[@id="loginPop"]/div/button[1]')
-element$clickElement()
-
-#기준년/분기 선택
-year <- remDr$findElement(using="xpath", value ="//*[@id='selectYear']/option[@value='2020']")
-year$clickElement()
-quarter <- remDr$findElement(using="xpath",value="//*[@id='selectQu']/option[@value='3']")
-quarter$clickElement()
-
-#정보분류 선택
-info_class <- remDr$findElement(using="xpath",value="//*[@id='infoCategory']/option[6]")
-info_class$clickElement()
-
-#생활밀접업좀
-#인구수, 소득/가구수, 임대시세가 아닐 시
-#중분류
-sector <- remDr$findElement(using="xpath",value="//*[@id='induL']/option[3]")
-sector$clickElement()
-#소분류
-option <- remDr$findElement(using="xpath",value="//*[@id='induM']/option[37]")
-option$clickElement()
-
-#검색
-button <- remDr$findElement(using="xpath",value="//*[@id='presentSearch']")
-button$clickElement()
-
-#table 읽기
-table <- remDr$findElement(using="id",value="table1")
-page_parse = remDr$getPageSource()[[1]]
-page_html = page_parse %>% read_html()
-
-Sys.setlocale('LC_ALL', 'English')
-table = page_html %>% html_table(fill = TRUE)
-Sys.setlocale('LC_ALL', 'Korean')
-data <- as.data.frame(table[4])[1:2,]
-# data <- data[str_sub(data$행정구역,-1)=='구',]
-data <- rbind(data[1:2,],data[str_sub(data$행정구역,-1)=='구',])
-# View(data)
-file_name <- paste0(year$getElementText(),"_",quarter$getElementText(),"_",
-                    info_class$getElementText(),".csv")
-setwd('C:/Users/ChangYong/Desktop/나노디그리/1.정규강의 학습자료/1차 프로젝트/소상공인/2. 데이터/원본데이터/우리마을 상권분석 서비스 데이터')
-write.csv(data,file_name)
-
-#--------------------------------------------------------------------------------------------------------------
-rm(list = ls())
-library(rvest)
-library(RSelenium)
-library(httr)
-library(seleniumPipes)
-library(stringr)
 
 ##selenium(셀레니움)을 켭니다
 ##cmd를 켠 상태에서
@@ -95,8 +26,8 @@ remDr$navigate(url_path)
 element <- remDr$findElement(using="xpath",value='//*[@id="loginPop"]/div/button[1]')
 element$clickElement()
 
-
-#crawling하여 csv파일로 저장하는 함수 생성성
+ifelse(a == ifelse(b==2,1,0),'yes','no')
+#crawling하여 csv파일로 저장하는 함수 생성
 crawling <- function(x,y){
   table <- remDr$findElement(using=x,value=y)
   page_parse = remDr$getPageSource()[[1]]
@@ -106,10 +37,7 @@ crawling <- function(x,y){
   Sys.setlocale('LC_ALL', 'Korean')
   data <- as.data.frame(table[4])
   if(b==8){
-    data_final <- rbind(data[1:2,],data[str_sub(data$행정구역,-1)=='동',])
-    file_name <- paste0(ele_year$getElementText(),"_",ele_quarter$getElementText(),"_",ele_info_class$getElementText(),".csv")
-  } else if(b==9) {
-    data_final <- rbind(data[1:2,],data[str_sub(data$행정구역,-1)=='구',])
+    data_final <- rbind(data[1:2,],data[str_sub(data$행정구역,-1)==ifelse(b==8,'동','구'),])
     file_name <- paste0(ele_year$getElementText(),"_",ele_quarter$getElementText(),"_",ele_info_class$getElementText(),".csv")
   } else{
     data_final <- rbind(data[1:2,],data[str_sub(data$행정구역,-1)=='구',])
