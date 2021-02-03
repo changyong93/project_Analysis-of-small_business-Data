@@ -4,8 +4,8 @@ library(tidyverse)
 
 #상권코드 -행정동 코드 파일 읽기
 library(XML)
-loc1 <- xmlToDataFrame(doc = 'http://openapi.seoul.go.kr:8088/6a596b4c4462616235334e454e5a52/xml/TbgisTrdarRelm/1/1000/')
-loc2 <- xmlToDataFrame(doc = 'http://openapi.seoul.go.kr:8088/6a596b4c4462616235334e454e5a52/xml/TbgisTrdarRelm/1001/1496/') 
+loc1 <- xmlToDataFrame(doc = 'http://openapi.seoul.go.kr:8088/(인증키)/xml/TbgisTrdarRelm/1/1000/')
+loc2 <- xmlToDataFrame(doc = 'http://openapi.seoul.go.kr:8088/(인증키)/xml/TbgisTrdarRelm/1001/1496/') 
 var <- 1:2
 loc1 <- loc1 %>% slice(-var)
 loc2 <- loc2 %>% slice(-var)
