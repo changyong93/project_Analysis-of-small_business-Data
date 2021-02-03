@@ -58,7 +58,8 @@
 
 # 프로젝트 발표 자료
 ---
-[발표자료_212003_f.pptx](https://github.com/changyong93/project_Analysis-of-small_business-Data/files/5916475/_212003_f.pptx)
+[서울시 행정구역 및 업종별 매출액 Top3 업종 제시(발표자료).pdf](https://github.com/changyong93/project_Analysis-of-small_business-Data/files/5916486/Top3.pdf)
+
 
 
 		
