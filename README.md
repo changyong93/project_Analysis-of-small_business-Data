@@ -56,6 +56,9 @@
 > 2. 보정한 매출액이 모든 결제 수단을 대변 불가 ex)현금결제 비율이 높은 업종
 > 3. 기술 요구 조건에 대한 분석을 제외하여 창업 희망자에게 해당 분석 결과만으로 업태를 제시하는 것이 불가
 
+# 프로젝트 발표 자료
+---
+[발표자료_212003_f.pptx](https://github.com/changyong93/project_Analysis-of-small_business-Data/files/5916475/_212003_f.pptx)
 
 
 		
