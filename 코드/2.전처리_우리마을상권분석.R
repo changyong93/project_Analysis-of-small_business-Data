@@ -7,16 +7,23 @@ getwd()
 
 file_name <- list.files() #폴더 내 파일명 가져오기
 file_name_list <- str_sub(file_name,1,nchar(file_name)-4) #파일명에서 .csv 제거
-info_class_list <- c('점포수'=1,'신생기업 생존율'=2,'연차별 생존율'=3,'평균영업기간'=4,
-                     '개폐업수(률)'=5,'인구수'=6,'소득&가구수'=7,'임대시세'=8)
+info_class_list <- c('신생기업 생존율'=2,'소득&가구수'=7,'임대시세'=8)
 
 #엑셀파일 데이터 전처리 및 추출
 modi_data <- function(filename,info_class,year){
+  #파일 읽기
   test <- read.csv(filename)
-  ifelse(info_class>5,col <- 2,col <- 2:3)
+  
+  #분류 유형별 컬럼 선택
+  col <- ifelse(info_class>5,2,2:3)
+  
+  #필요한 년도 데이터가 포함된 컬럼 선택
   col_num <- grep(pattern = year,x = names(test))
   test <- test[,c(col,as.integer(col_num))]
+  
   col_num <- dim(test)[2]
+  
+  #생활밀접업종이라는 컬럼의 문자 전처리
   if(colnames(test)[2]=="생활밀접업종"){
     d1 <- c()
     d2 <- c()
@@ -32,10 +39,15 @@ modi_data <- function(filename,info_class,year){
     test$대분류 <- d1
     test$소분류 <- d2
   }
+  #년도 및 분기 컬럼 생성
   year_quarter <- names(test)[3]
   test$년도 <- str_sub(year_quarter,2,5)
   test$분기 <- str_sub(year_quarter,8,8)
+  
+  #컬럼명 변경
   colnames(test)[1:col_num] <- test[1,1:col_num]
+  
+  #데이터셋 구성 최적화
   if(colnames(test)[2]=="생활밀접업종"){
     test <- test[-1,c((dim(test)[2]-1),dim(test)[2],(dim(test)[2]-3),(dim(test)[2]-2),1,3:(dim(test)[2]-4))]
   } else{
@@ -61,8 +73,6 @@ for (i in c(1:(length(file_name)))){
   }
   if (y==2){
     new_Enter_data = rbind(new_Enter_data,data)
-  # } else if (y==6){
-  #   pop_date = rbind(pop_date, data)
   } else if (y==7){
     income_data = rbind(income_data, data)
   } else {
@@ -72,7 +82,6 @@ for (i in c(1:(length(file_name)))){
 }
 
 #불필요 행 및 열 제거
-# store_num_data <- store_num_data %>% filter(행정구역!="서울시 전체")
 new_Enter_data <- new_Enter_data %>% filter(행정구역!="서울시 전체")
 rent_data <- rent_data %>% filter(행정구역!="행정구역") %>% select(-c("환산 임대료.1","환산 임대료.2"))
 income_data <- income_data %>% filter(행정구역!="서울시 전체") %>% select(-c("가구수"))

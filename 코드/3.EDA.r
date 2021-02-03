@@ -28,19 +28,9 @@ ggplot(data = data, aes(x = 행정구역, y = 매출총액_median, fill = 행정
   theme(axis.text.x = element_text(angle = 45, size = 10, face="bold"),
         plot.title = element_text(hjust = 0.5,size = 20, face="bold"))+ggtitle("행정구별 매출총액_median 박스플랏")
 
-##매출총액 평균 및 중앙값 밀도함수
-data %>% 
-  gather(구분,값,매출총액_mean, 매출총액_median) %>% 
-  ggplot(aes(x = 값, y = ..density.., fill = 구분))+geom_density(alpha = 0.5)+
-  ggtitle("매출총액 mean vs 매출총액 median")+theme(plot.title = element_text(hjust = 0.5, size = 15, face = "bold"))
+#임대료 및 점포수 기준으로 전처리를 진행한 상태에서 나머지 아웃라이어는 모두 고려할 예정이므로
+#중앙값 및 평균 중 평균으로 분석을 진행하고, 아웃라이어에 의한 영향을 줄이기 위해 매출액 및 유동인구수는 자연로그화
 
-#아웃라이어 개수
-library(DescTools)
-length(Outlier(x = data$매출총액_mean, method = "boxplot"))
-length(Outlier(x = data$매출총액_median, method = "boxplot"))
-
-# 임대료 기준으로 데이터를 추리고, 점포수가 5개 이하인 데이터를 추려서 바이어스를 최대한 줄인 상태에서
-# 이상치를 포함한 나머지 데이터 모두를 가만할 예정이므로 평균값으로 진행
 
 #데이터셋 정리_1차 정리
 dataset <- smallbz_total_1501_2009 %>% 
@@ -76,7 +66,7 @@ dataset <- smallbz_total_1501_2009 %>%
             총매출건수 = mean(log(총매출건수))) %>%
   mutate(년분기 = paste0(년도,"_",분기)) %>% 
   as.data.frame()
-summary(dataset)
+
 #ln() 후 -inf를 0으로 변경
 dataset[,"총유동인구"] <- ifelse(is.infinite(dataset[,"총유동인구"])==T, 0, dataset[,"총유동인구"])
 
@@ -114,7 +104,7 @@ dataset %>%
                                   axis.text.x = element_text(angle = 50, vjust = 0.6))+
   geom_text(data = text,mapping = aes(x = num+0.5, y = 매출비율, label = 요일), fontface = "bold", size = 6)
 
-########  1-2. 요일별 매출 비율 #box plot
+ ########  1-2. 요일별 매출 비율 #box plot
 dataset %>% 
   filter(년분기 !="2020_3") %>% 
   gather(key = 요일,value = 비율, 매출비율_월:매출비율_일) %>%
@@ -164,7 +154,7 @@ dataset %>%
 
 ########  2-3.년&분기 별 대분류에 따른 매출비율 비교
 data <- dataset %>% mutate(년분기 = paste0(년도,"_",분기)) %>% filter(년분기 !="2020_3") %>% select(-년분기)
-text = data.frame(text = c("서비스업","외식업","소매업"), x = c(15.7, 17.9, 19.1), y = c(0.36, 0.7, 0.30))
+text = data.frame(text = c("서비스업","외식업","소매업"), x = c(15.7, 18, 19.1), y = c(0.36, 0.7, 0.30))
 ggplot()+
   geom_density(data = data, mapping = aes(x = 매출총액, fill = 대분류),alpha = 0.4)+
   geom_text(data=text, mapping = aes(x = x, y = y, label = text, color = text),size = 7, fontface = "bold")+theme_classic()

@@ -87,9 +87,11 @@ data5 <- read.csv("서울시_우리마을가게_상권분석서비스(상권-점
 data6 <- read.csv("서울시_우리마을가게_상권분석서비스(상권-점포)_2020년.csv")
 jeompo <- rbind(data1,data2,data3,data4,data5,data6)
 
+#행정동 및 행정구 컬럼 추가
 jeompo <- merge(x = jeompo, y = sangkwon_loc,by.x = '상권_코드', by.y = 'TRDAR_CD', all.x=T)
 jeompo <- merge(x = jeompo, y = sangkwon_gu,by.x = 'ADSTRD_CD', by.y = '행자부행정동코드', all.x=T)
 
+#필요한 컬럼 선택 및 컬럼명 변경
 vars <- c(2,3,4,17,9,10,11,13,15)
 jeompo <- jeompo[,vars]
 colnames(jeompo)[2:9] <- c("년도","분기","행정구역","소분류","점포수","점포수_유사업종","점포수_개업","점포수_폐업")
@@ -102,7 +104,6 @@ smallbz_total_1501_2009 <- merge(x = smallbz_total_1501_2009, y= jeompo, by=c("�
 
 #점포수 처리, NA=>0
 na_0 <- function(x){x <- ifelse(is.na(x)==T,0,x) ; return(x)}
-
 vars <- c("점포수_추정매출","점포수","점포수_유사업종","점포수_개업","점포수_폐업")
 for(i in vars){
   smallbz_total_1501_2009[,i] <- na_0(smallbz_total_1501_2009[,i])
@@ -236,7 +237,6 @@ smallbz_total_1501_2009 <- smallbz_total_1501_2009 %>% filter(is.na(n)==T) %>% s
 #유동인구 데이터 가져오기
 setwd("C:/Users/ChangYong/Desktop/나노디그리/1.정규강의 학습자료/1차 프로젝트/소상공인/2. 데이터/원본데이터")
 smallbz_pop <- read.csv("서울시 우리마을가게 상권분석서비스(상권-추정유동인구).csv")
-
 
 #유동인구 데이터에 행정구 기준 추가
 smallbz_pop <- merge(x = smallbz_pop, y = sangkwon_loc,by.x = '상권_코드', by.y = 'TRDAR_CD', all.x=T)
