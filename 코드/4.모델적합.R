@@ -349,3 +349,187 @@ RMSE <- which.min(grid$RMSE)
 F1 <- which.max(grid$F1)
 R2 <- which.max(grid$R2)
 cat(RMSE,F1,R2)
+#-------------------------------------------------------------------------------------------------------
+rm(list = ls())
+setwd("C:/Users/ChangYong/Desktop/나노디그리/1.정규강의 학습자료/1차 프로젝트/소상공인/2. 데이터")
+load("dataset_set.rda")
+
+#입력변수를 변경하며 모델 생성을 위해 데이터셋 더미 만들어놓기기
+trainset_dummy <- trainset
+testset_dummy <- testset
+
+library(tidyverse)
+library(randomForest)
+
+#반복문을 사용한 모형 튜닝
+#1차 #최적 mtry 찾기
+trainset <- trainset_dummy
+testset <- testset_dummy
+grid <- expand.grid(ntree = 200,
+                    mtry = 3:16,
+                    seed = 1234,
+                    error = NA,
+                    RMSE = NA,
+                    F1 = NA,
+                    R2 = NA) 
+filename = "1차"
+grid_filename <- "grid1"
+pred_filename <- "pred1"
+
+
+#2차 error & F1, R2, RMSE가 높았던 mtry 6,9,12,13에서 ntree 변경하여 튜닝
+trainset <- trainset_dummy
+testset <- testset_dummy
+grid <- expand.grid(ntree = seq(from = 200, to = 500, by = 100),
+                    mtry = c(9,12,14),
+                    seed = 1234,
+                    error = NA,
+                    RMSE = NA,
+                    F1 = NA,
+                    R2 = NA) 
+filename = "2차"
+grid_filename <- "grid2"
+pred_filename <- "pred2"
+
+#3차 error & F1, R2, RMSE가 높았던 mtry 6,9,12,13에서 ntree 변경하여 튜닝
+trainset <- trainset_dummy
+testset <- testset_dummy
+grid <- expand.grid(ntree = seq(from = 500, to = 1000, by = 100),
+                    mtry = c(9),
+                    seed = 1234,
+                    error = NA,
+                    RMSE = NA,
+                    F1 = NA,
+                    R2 = NA) 
+filename = "3차"
+grid_filename <- "grid3"
+pred_filename <- "pred3"
+
+#4차 변수중요도 상위 5개만 선택하여 튜닝
+vars <- c("중분류","총매출건수","행정구역","매출비율_0611","매출비율_토104050대","매출총액")
+loc <- which(colnames(trainset_dummy) %in% vars)
+trainset <- trainset_dummy[,loc]
+testset <- testset_dummy[,loc]
+grid <- expand.grid(ntree = seq(200,700,100),
+                    mtry = 2:5,
+                    seed = 1234,
+                    error = NA,
+                    RMSE = NA,
+                    F1 = NA,
+                    R2 = NA) 
+filename = "4차"
+grid_filename <- "grid4"
+pred_filename <- "pred4"
+
+#4차 변수중요도 상위 5개만 선택하여 튜닝(최종 튜닝 조건으로 실행)
+vars <- c("중분류","총매출건수","행정구역","매출비율_0611","매출비율_토104050대","매출총액")
+loc <- which(colnames(trainset_dummy) %in% vars)
+trainset <- trainset_dummy[,loc]
+testset <- testset_dummy[,loc]
+grid <- expand.grid(ntree = 700,
+                    mtry = 5,
+                    seed = 1234,
+                    error = NA,
+                    RMSE = NA,
+                    F1 = NA,
+                    R2 = NA) 
+filename = "5차"
+grid_filename <- "grid5"
+pred_filename <- "pred5"
+
+
+pred_list = c()
+for(i in 1:nrow(grid)){
+  disp <- str_glue('현재 {i}행 실행 중! [ntree: {grid$ntree[i]}, mtry: {grid$mtry[i]}]  {Sys.time()}')
+  cat(disp,"\n")
+  
+  set.seed(seed = grid$seed)
+  fit <- randomForest(formula = 매출총액~.,
+                      data = trainset,
+                      ntree = grid$ntree[i],
+                      mtry = grid$mtry[i])
+  grid$error[i] <- tail(x = fit$mse, n = 1)
+  
+  #변수중요도 플랏 저장
+  setwd(paste0("C:/Users/ChangYong/Desktop/나노디그리/1.정규강의 학습자료/1차 프로젝트/소상공인/4.모델 적합/랜덤포레스트/",filename))
+  png(filename = paste0("변수중요도_",i,".png"), width = 8000, height = 4000, res = 500)
+  varImpPlot(x = fit, main = 'variable importance')
+  dev.off()
+  
+  #시험셋으로 목표변수 추정값 생성
+  pred1 <- predict(object = fit, newdata = testset, type = 'response')
+  pred_list <- cbind(pred_list,pred1)
+  #실제 관측치 벡터 생성
+  real <- testset$매출총액
+  
+  #실측값과 비교하기 위해 testset 조작
+  results <- testset_dummy
+  results$매출총액_pred <- pred1
+  results <- results %>%
+    group_by(행정구역,대분류) %>%
+    mutate(rank_real = row_number(desc(매출총액)),
+           rank_pred = row_number(desc(매출총액_pred)),
+           top3_real = ifelse(rank_real <=3,"1","0"),
+           top3_pred = ifelse(rank_pred <=3,"1","0"))
+  
+  #rank를 factor형으로 변경
+  num <- ncol(results)
+  results[,(num-3):num] <- map_df(.x = results[,(num-3):num],.f = as.factor)
+  
+  #real_rank와 pred_rank 산점도 그리기
+  results %>% 
+    ggplot(aes(x = rank_real, y = rank_pred, color = as.factor(rank_real)))+
+    geom_point(position = position_jitter(),size = 2)+
+    ggsave(filename = paste0("rank산점도rank_",i,"_",".png"), width = 24, height = 12, units = "cm")
+  
+  results %>% 
+    ggplot(aes(x = rank_real, y = rank_pred, color = as.factor(rank_real)))+
+    geom_point(position = position_jitter(),size = 2)+
+    ggsave(filename = paste0("rank산점도대분류_",i,"_",".png"), width = 24, height = 12, units = "cm")
+  
+  
+  #회귀값 예측 결과
+  grid$RMSE[i] <- MLmetrics::RMSE(y_pred = pred1, y_true = real)
+  
+  #Top3 범주값 예측 결과
+  grid$F1[i] <- MLmetrics::F1_Score(y_true = results$top3_real, y_pred = results$top3_pred, positive = "1")
+  grid$R2[i] <- MLmetrics::R2_Score(y_true = real, y_pred = pred1)
+  
+  disp <- str_glue('현재 {i}행 완료! [{round((i)/nrow(grid),2)*100}% 완료]')
+  write.csv(grid,file = paste0(grid_filename,".csv"), row.names = F)
+  Sys.sleep(2)
+  write.csv(pred_list,file = paste0(pred_filename,"_list.csv"),row.names = F)
+  Sys.sleep(2)
+  cat(disp, "\n")
+}
+#튜닝 결과 확인
+windows()
+plot(x = grid$error, type = 'b', pch = 19, col = 'gray30', main = 'Grid Search Result')
+abline(v = which.min(x = grid$error), col = 'red', lty = 2)
+loc <- which.min(x = grid$error)
+print(x = loc)
+grid[loc,]
+
+#RMSE,F1,R2 플랏
+text <- data.frame(x = rep(nrow(grid)+0.5,4),
+                   y = as.numeric(grid[nrow(grid),4:7]),
+                   label = colnames(grid)[4:7])
+text[text$label=="error",2] <- text[text$label=="error",2]*10
+# windows()
+grid %>% mutate(order = row_number()) %>% 
+  ggplot(aes(x = order, y = RMSE))+geom_line(col = "blue")+geom_point(col = "blue")+ylab("")+
+  geom_vline(xintercept = which.min(grid$RMSE), col = "blue", lty = 1, lwd = 2, alpha = 0.7)+
+  geom_line(aes(y = F1), col = "red")+geom_point(aes(y = F1),col = "red")+
+  geom_vline(xintercept = which.max(grid$F1), col = "red", lty = 6, lwd = 1.75)+
+  geom_line(aes(y = R2), col = "orange")+geom_point(aes(y = R2), col = "orange")+
+  geom_vline(xintercept = which.max(grid$R2), col = "orange", lty = 2, lwd = 1.2)+
+  geom_line(aes(y = error*10), col = "black")+geom_point(aes(y = error*10), col = "black")+
+  geom_vline(xintercept = which.min(grid$error), col = "black", lty = 2, lwd = 1.2)+
+  scale_y_continuous(name = "RMSE, F1, R2",sec.axis = dup_axis(~./10,name = "MSE Error"), limits = c(0,1), breaks = seq(0,1,0.1))+
+  geom_text(data = text, mapping = aes(x = text$x, y = text$y, label = text$label),col = c("black","blue","red","orange"), size = 10)+
+  theme_classic()
+
+which.min(grid$RMSE)
+which.max(grid$F1)
+which.max(grid$R2)
+which.min(grid$error)
